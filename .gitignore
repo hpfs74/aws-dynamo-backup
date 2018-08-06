@@ -1,0 +1,9 @@
+.idea
+
+node_modules
+
+#Do not ignore the required libraries for lambda - they are needed for transforming xml to json
+!node_modules/x2js
+!node_modules/xmldom
+
+.DS_Store
