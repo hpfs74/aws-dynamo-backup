@@ -1,40 +1,22 @@
-const aws = require('aws-sdk');
-const dynamodb = new aws.DynamoDB();
 const logger = require('./logger');
+const dynamoHelper = require('./dynamo-helper');
 
 exports.handler = (event, context, callback) => {
-    console.log('Received event', event);
-    // var tablesToBackup = event.tablesToBackup.split(",");
-    // var promises = tablesToBackup.map(backupTable);
-    dynamodb.listTables({}, function(err, AllTables) {
-      if (err) console.log(err, err.stack);
-      else    {
-        console.log("\n\n" + AllTables['TableNames'] + "\n\n");
-        for (var item in AllTables['TableNames']) {
-          PrintData(AllTables['TableNames'][item]);
-          backupTable(AllTables['TableNames'][item]);
-        }
-      }
-    });
-    // Promise.all(promises)
-    //   .then(result => { console.log(result); callback(); })
-    //   .catch(reason => { console.log(reason); callback(reason); });
+	logger.log('Received event', event);
+	let promises = [];
+	dynamoHelper
+		.listTables()
+		.then(data => {
+			promises = data['AllTables'].map(table =>
+				dynamoHelper.backupTable(table)
+			);
+		})
+		.catch(err => {
+			callback(new Error('Unable to retrieve tables. ' + err.message));
+		});
+
+	// fullfill all the promises
+	Promise.all(promises)
+		.then(() => callback())
+		.catch(err => callback(err));
 };
-
-function PrintData(tablename) {
-  console.log("data: " + tablename);
-}
-
-function backupTable(tablename) {
-  var timestamp = new Date().toISOString()
-    .replace(/\..+/, '')
-    .replace(/:/g, '')
-    .replace(/-/g, '');
-
-  var params = {
-    TableName: tablename,
-    BackupName: tablename + timestamp
-  };
-  console.log(params);
-  return dynamodb.createBackup(params).promise();
-}
