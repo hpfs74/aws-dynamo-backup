@@ -3,6 +3,7 @@ const getBackupTableName = require('./serial-number').getBackupTableName;
 const aws = require('aws-sdk');
 const dynamodb = new aws.DynamoDB();
 const tags = new aws.ResourceGroupsTaggingAPI();
+const dateDiff = require('./date-diff');
 
 /**
  * printData - dump table information
@@ -75,6 +76,27 @@ function stripTableNameFromArn(arn) {
 }
 
 /**
+ * getBackupHistoryDay - get how many days to backup from tags
+ *
+ * @param  {type} resource                    the resource
+ * @param  {type} tagKey = 'BackupHistoryDay' the tag name
+ * @return {type}                             an integer with the days to mantain backup default is 30
+ */
+function getBackupHistoryDay(resource, tagKey = 'BackupHistoryDay') {
+	let backupHistoryDay = 30;
+
+	if (resource && resource.Tags) {
+		let daysTag = resource.Tags.filter(tag => tag.Key === tagKey);
+
+		if (daysTag.length > 0) {
+			backupHistoryDay = daysTag[0].Value;
+		}
+	}
+
+	return backupHistoryDay;
+}
+
+/**
  * listTablesToBackup - get the list of table to backup based on tag
  *
  * @param  {type} key = 'knab-dynamo-backup' the tag name to filter
@@ -110,9 +132,37 @@ async function listTablesToBackup(key = 'knab-dynamo-backup', value = 'true') {
 	return result;
 }
 
-async function maintenancePlan(table) {}
+/**
+ * maintenancePlan - run a maintenance on backup to remove the oldest
+ *
+ * @param  {type} table table name to maintain
+ * @param  {type} days  number of days to keep
+ * @throws 							aws expection
+ */
+async function maintenancePlan(table, days) {
+	const backups = await dynamodb
+		.listBackups({
+			Limit: 50,
+			TableName: table
+		})
+		.promise();
 
+	const now = new Date();
+	for (let backup in backups) {
+		if (dateDiff.inDays(backup.BackupCreationDateTime, now) > days) {
+			await dynamodb
+				.deleteBackup({
+					BackupArn: backup.BackupARN
+				})
+				.promise();
+		}
+	}
+}
+
+exports.getBackupHistoryDay = getBackupHistoryDay;
+exports.stripTableNameFromArn = stripTableNameFromArn;
 exports.listTablesToBackup = listTablesToBackup;
 exports.listTables = listTables;
 exports.backupTable = backupTable;
 exports.printData = printData;
+exports.maintenancePlan = maintenancePlan;
