@@ -37,7 +37,8 @@ describe('dynamohelper', () => {
 			};
 
 			awsStub = {
-				DynamoDB: sinon.stub().returns(dynamodbstub)
+				DynamoDB: sinon.stub().returns(dynamodbstub),
+				ResourceGroupsTaggingAPI: sinon.stub().returns(null)
 			};
 			dynamodbstub.createBackup.yieldsAsync(null, {});
 
@@ -64,6 +65,7 @@ describe('dynamohelper', () => {
 	describe('listTables', () => {
 		let listTables;
 		let dynamodbstub;
+		let resourceapistub;
 		let awsStub;
 		let logger;
 
@@ -76,8 +78,13 @@ describe('dynamohelper', () => {
 				listTables: sinon.stub()
 			};
 
+			resourceapistub = {
+				getResources: sinon.stub()
+			}
+
 			awsStub = {
-				DynamoDB: sinon.stub().returns(dynamodbstub)
+				DynamoDB: sinon.stub().returns(dynamodbstub),
+				ResourceGroupsTaggingAPI: sinon.stub().returns(resourceapistub)
 			};
 			dynamodbstub.listTables.yieldsAsync(null, [
 				{ item: 'a' },
