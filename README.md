@@ -12,3 +12,7 @@ Lately will do a maintenance plan to roll out all backups older than the what is
 ## tags
 
 ## improvements
+
+## Pipeline 
+
+the repo includes a pipleine for build
