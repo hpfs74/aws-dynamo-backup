@@ -80,7 +80,7 @@ describe('dynamohelper', () => {
 
 			resourceapistub = {
 				getResources: sinon.stub()
-			}
+			};
 
 			awsStub = {
 				DynamoDB: sinon.stub().returns(dynamodbstub),
