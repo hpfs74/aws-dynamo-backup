@@ -1,5 +1,3 @@
-const expect = require('chai').expect;
-
 describe('Lambda handler', () => {
 	describe('index', () => {
 		it('should collect all available tables');
