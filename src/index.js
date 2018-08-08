@@ -7,7 +7,7 @@ exports.handler = async (event, context, callback) => {
 	let promises = [];
 
 	try {
-		let tables = dynamoHelper.listTablesToBackup();
+		let tables = await dynamoHelper.listTablesToBackup();
 		promises = tables.map(table => {
 			let tableName = dynamoHelper.stripTableNameFromArn(table.ResourceARN);
 			let backupHistoryDay = dynamoHelper.getBackupHistoryDay(table);
