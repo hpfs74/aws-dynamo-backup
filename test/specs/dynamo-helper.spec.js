@@ -60,4 +60,44 @@ describe('dynamohelper', () => {
 			});
 		});
 	});
+
+	describe('listTables', () => {
+		let listTables;
+		let dynamodbstub;
+		let awsStub;
+		let logger;
+
+		beforeEach(() => {
+			logger = {
+				log: sinon.spy(),
+				error: sinon.spy()
+			};
+			dynamodbstub = {
+				listTables: sinon.stub()
+			};
+
+			awsStub = {
+				DynamoDB: sinon.stub().returns(dynamodbstub)
+			};
+			dynamodbstub.listTables.yieldsAsync(null, [
+				{ item: 'a' },
+				{ item: 'b' },
+				{ item: 'c' }
+			]);
+
+			listTables = proxyquire('../../src/dynamo-helper', {
+				'aws-sdk': awsStub,
+				'./logger': logger
+			}).listTables;
+		});
+
+		it('should return the list of all available table', done => {
+			listTables()
+				.then(data => {
+					expect(data.length).to.equal(3);
+					done();
+				})
+				.catch(err => done(err));
+		});
+	});
 });
