@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "run:local": "docker run --env-file ./env.list --rm -v \"$PWD/src\":/var/task lambci/lambda:nodejs8.10",
     "lint": "eslint src/**/*.js test/**/*.js",
     "test": "mocha -u bdd test/specs/**/*.js"
   },
