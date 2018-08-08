@@ -77,7 +77,7 @@ function stripTableNameFromArn(arn) {
 function getBackupHistoryDay(resource, tagKey = 'BackupHistoryDay') {
 	let backupHistoryDay = 30;
 
-	if (resource && resource.Tags) {
+	if (resource && Array.isArray(resource.Tags)) {
 		let daysTag = resource.Tags.filter(tag => tag.Key === tagKey);
 
 		if (daysTag.length > 0) {
