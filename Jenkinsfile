@@ -24,7 +24,7 @@ pipeline {
                 }
                 dir('scripts')
                 {
-                    git branch: 'master', credentialsId: 'bitbucket-jenkins', url: "git@bitbucket.org:knabab/aws-dynamodb-backup.git"
+                    git branch: 'master', credentialsId: 'bitbucket-jenkins', url: "git@bitbucket.org:knabab/knab-jenkins-scripts.git""
                 }
             }
         }
