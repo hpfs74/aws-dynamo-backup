@@ -3,7 +3,6 @@ const sinon = require('sinon');
 const proxyquire = require('proxyquire').noCallThru();
 
 describe('dynamohelper', () => {
-	describe('listTables', () => {});
 
 	describe('printData', () => {
 		it('should print the table name', () => {
