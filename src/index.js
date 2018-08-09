@@ -1,26 +1,36 @@
 const logger = require('./logger');
 const dynamoHelper = require('./dynamo-helper');
 
+let genProcessedTableList;
+exports.genProcessedTableList = genProcessedTableList = async function () {
+	const tables = await dynamoHelper.listTablesToBackup();
+	return (function* () {
+		for (const tableItem of tables) {
+			yield {
+				tableName: dynamoHelper.stripTableNameFromArn(tableItem.ResourceARN),
+				backupHistoryDay: dynamoHelper.getBackupHistoryDay(tableItem)
+			};
+		}
+	})();
+};
+
+let genPromises;
+exports.getPromises = genPromises = function (tables) {
+	return Array.from(tables, (table) => {
+		return dynamoHelper.backupTable(table.tableName).then(() =>
+			dynamoHelper.maintenancePlan(table.tableName, table.backupHistoryDay)
+		);
+	});
+};
+
 exports.handler = async (event, context, callback) => {
 	logger.log('Received event', event);
 
-	let promises = [];
-
 	try {
-		let tables = await dynamoHelper.listTablesToBackup();
-		promises = tables.map(table => {
-			let tableName = dynamoHelper.stripTableNameFromArn(table.ResourceARN);
-			let backupHistoryDay = dynamoHelper.getBackupHistoryDay(table);
-
-			dynamoHelper.backupTable(tableName);
-			dynamoHelper.maintenancePlan(tableName, backupHistoryDay);
-		});
+		let tables = await genProcessedTableList();
+		await Promise.all(genPromises(tables));
+		callback();
 	} catch (err) {
 		return callback(err);
 	}
-
-	// fullfill all the promises
-	Promise.all(promises)
-		.then(() => callback())
-		.catch(err => callback(err));
 };

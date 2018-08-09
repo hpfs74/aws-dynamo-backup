@@ -8,8 +8,7 @@ const dateDiff = require('./date-diff');
 /**
  * printData - dump table information
  *
- * @param  {type} tablename the table name
- * @return {type}           none
+ * @param  {string} tablename the table name
  */
 function printData(tablename) {
 	logger.log('data: ' + tablename);
@@ -18,8 +17,8 @@ function printData(tablename) {
 /**
  * backupTable - create a promise to execute the backup of the dynamodb table
  *
- * @param  {type} tableName dynamodb table name
- * @return {type}           a promise
+ * @param  {string} tableName dynamodb table name
+ * @return {Promise<AWS.DynamoDB.Types.CreateBackupOutput>}           a promise
  */
 function backupTable(tableName) {
 	const params = {
@@ -27,21 +26,14 @@ function backupTable(tableName) {
 		BackupName: getBackupTableName(tableName)
 	};
 
-	return new Promise((resolve, reject) => {
-		logger.log(params);
-		dynamodb.createBackup(params, (err, data) => {
-			if (err) {
-				return reject(err);
-			}
-			resolve(data);
-		});
-	});
+	logger.log(params);
+	return dynamodb.createBackup(params).promise();
 }
 
 /**
  * listTables - return the list of all the dynamodb tables in the current role.
  *
- * @return {type}  promise
+ * @return {Promise<AWS.DynamoDB.Types.ListTablesOutput>}  promise
  */
 function listTables() {
 	return new Promise((resolve, reject) => {
@@ -57,8 +49,8 @@ function listTables() {
 /**
  * stripTableNameFromARN - get the table name from a arn of dynamodb
  *
- * @param  {type} arn description
- * @return {type}     description
+ * @param  {string} arn description
+ * @return {string}     description
  */
 function stripTableNameFromArn(arn) {
 	if (!arn) {
@@ -78,14 +70,14 @@ function stripTableNameFromArn(arn) {
 /**
  * getBackupHistoryDay - get how many days to backup from tags
  *
- * @param  {type} resource                    the resource
- * @param  {type} tagKey = 'BackupHistoryDay' the tag name
- * @return {type}                             an integer with the days to mantain backup default is 30
+ * @param  {AWS.ResourceGroupsTaggingAPI.ResourceTagMapping} resource                    the resource
+ * @param  {string} tagKey = 'BackupHistoryDay' the tag name
+ * @return {number}                             an integer with the days to mantain backup default is 30
  */
 function getBackupHistoryDay(resource, tagKey = 'BackupHistoryDay') {
 	let backupHistoryDay = 30;
 
-	if (resource && resource.Tags) {
+	if (resource && Array.isArray(resource.Tags)) {
 		let daysTag = resource.Tags.filter(tag => tag.Key === tagKey);
 
 		if (daysTag.length > 0) {
@@ -99,10 +91,10 @@ function getBackupHistoryDay(resource, tagKey = 'BackupHistoryDay') {
 /**
  * listTablesToBackup - get the list of table to backup based on tag
  *
- * @param  {type} key = 'knab-dynamo-backup' the tag name to filter
- * @param  {type} value = 'true'             the value of the tag
+ * @param  {string} key = 'knab-dynamo-backup' the tag name to filter
+ * @param  {string} value = 'true'             the value of the tag
  *
- * @return {type}  an array that contains table name and tags
+ * @return {AWS.ResourceGroupsTaggingAPI.ResourceTagMappingList}  an array that contains table name and tags
  * @throws 				 an aws exception in case not able to access resource
  */
 async function listTablesToBackup(key = 'knab-dynamo-backup', value = 'true') {
@@ -135,11 +127,13 @@ async function listTablesToBackup(key = 'knab-dynamo-backup', value = 'true') {
 /**
  * maintenancePlan - run a maintenance on backup to remove the oldest
  *
- * @param  {type} table table name to maintain
- * @param  {type} days  number of days to keep
+ * @param   {string} table table name to maintain
+ * @param   {number} days  number of days to keep
+ * @returns {Promise<any>}
  * @throws 							aws expection
  */
 async function maintenancePlan(table, days) {
+	const result = [];
 	const backups = await dynamodb
 		.listBackups({
 			Limit: 50,
@@ -148,15 +142,18 @@ async function maintenancePlan(table, days) {
 		.promise();
 
 	const now = new Date();
-	for (let backup in backups) {
+	for (const backup of backups.BackupSummaries) {
 		if (dateDiff.inDays(backup.BackupCreationDateTime, now) > days) {
-			await dynamodb
-				.deleteBackup({
-					BackupArn: backup.BackupARN
-				})
-				.promise();
+			result.push(
+				dynamodb
+					.deleteBackup({
+						BackupArn: backup.BackupArn
+					})
+					.promise()
+			);
 		}
 	}
+	return Promise.all(result);
 }
 
 exports.getBackupHistoryDay = getBackupHistoryDay;

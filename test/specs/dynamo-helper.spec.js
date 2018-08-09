@@ -3,7 +3,6 @@ const sinon = require('sinon');
 const proxyquire = require('proxyquire').noCallThru();
 
 describe('dynamohelper', () => {
-	describe('listTables', () => {});
 
 	describe('printData', () => {
 		it('should print the table name', () => {
@@ -11,9 +10,11 @@ describe('dynamohelper', () => {
 				log: sinon.spy(),
 				error: sinon.spy()
 			};
-			const printData = proxyquire('../../src/dynamo-helper', {
+
+			/** @type {typeof import('../../src/dynamo-helper')} */
+			const {printData} = proxyquire('../../src/dynamo-helper', {
 				'./logger': logger
-			}).printData;
+			});
 
 			printData('test-table');
 
@@ -33,15 +34,18 @@ describe('dynamohelper', () => {
 				error: sinon.spy()
 			};
 			dynamodbstub = {
-				createBackup: sinon.stub()
+				createBackup: sinon.stub().returns({
+					promise: sinon.mock().resolves(true)
+				})
 			};
 
 			awsStub = {
 				DynamoDB: sinon.stub().returns(dynamodbstub),
 				ResourceGroupsTaggingAPI: sinon.stub().returns(null)
 			};
-			dynamodbstub.createBackup.yieldsAsync(null, {});
+			// dynamodbstub.createBackup.yieldsAsync(null, {});
 
+			
 			backupTable = proxyquire('../../src/dynamo-helper', {
 				'aws-sdk': awsStub,
 				'./logger': logger
