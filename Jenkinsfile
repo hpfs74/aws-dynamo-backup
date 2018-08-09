@@ -2,8 +2,8 @@ pipeline {
     agent { label "${env.BUILD_SLAVE}" }
     environment {
       SERVICE_NAME = 'aws-dynamodb-backup'
-      RELEASE_FOLDER = 'aws-dynamodb-backup/releases'
-      ARTIFACT_FOLDER = 'aws-dynamodb-backup/artifacts'
+      RELEASE_FOLDER = 'insurances/aws-dynamodb-backup/releases'
+      ARTIFACT_FOLDER = 'insurances/aws-dynamodb-backup/artifacts'
       ARTIFACT_BUCKET = 'knab-artifact-bucket-mgmt'
       AWS_S3_CREDENTIALS = 'jenkins-artifact-s3'
       AWS_S3_REGION = 'eu-west-1'
