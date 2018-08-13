@@ -26,5 +26,8 @@
     "mocha": "^5.2.0",
     "proxyquire": "^2.0.1",
     "sinon": "^6.1.4"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.291.0"
   }
 }

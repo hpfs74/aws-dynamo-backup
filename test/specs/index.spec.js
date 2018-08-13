@@ -5,13 +5,13 @@ const proxyquire = require('proxyquire').noCallThru();
 describe('Lambda handler', () => {
 	describe('index', () => {
 		/** @type {typeof import('../../src/dynamo-helper')} */
-		let dHelper;
+		let dHelperStub;
 		let dynamoDBStub;
 		let resourceAPIStub;
 		let awsStub;
-		let logger;
+		let loggerStub;
 		/** @type {typeof import('../../src/index')} */
-		let index;
+		let indexStub;
 
 		const testData = {
 			resources: {
@@ -75,7 +75,7 @@ describe('Lambda handler', () => {
 		};
 
 		before(() => {
-			logger = {
+			loggerStub = {
 				log: sinon.spy(),
 				error: sinon.spy()
 			};
@@ -107,19 +107,19 @@ describe('Lambda handler', () => {
 				{ item: 'c' }
 			]);
 
-			dHelper = proxyquire('../../src/dynamo-helper', {
+			dHelperStub = proxyquire('../../src/dynamo-helper', {
 				'aws-sdk': awsStub,
-				'./logger': logger
+				'./logger': loggerStub
 			});
 
-			index = proxyquire('../../src/index', {
-				'./dynamo-helper': dHelper,
-				'./logger': logger
+			indexStub = proxyquire('../../src/index', {
+				'./dynamo-helper': dHelperStub,
+				'./logger': loggerStub
 			});
 		});
 
 		it('should collect all available tables', () => {
-			return index.genProcessedTableList().then((data) => {
+			return indexStub.genProcessedTableList().then((data) => {
 				let test = Array.from(data);
 				expect(test.length).to.equal(testData.resources.ResourceTagMappingList.length);
 				expect(test).to.be.deep.equal(testData.tableList);
@@ -127,14 +127,14 @@ describe('Lambda handler', () => {
 		});
 
 		it('should create chain of promises to run backup', () => {
-			const test = index.getPromises(testData.tableList);
+			const test = indexStub.getPromises(testData.tableList);
 			expect(test.length).to.be.equal(testData.tableList.length);
 			expect(test.filter(p => !(p instanceof Promise)).length).to.be.equal(0);
 		});
 
 		it('should call callback with no error if success', (done) => {
 			const test = sinon.spy();
-			index.handler(null, null, test).then(() => {
+			indexStub.handler(null, null, test).then(() => {
 				expect(test.called).to.be.true;
 				expect(test.getCall(0).args.length).to.be.equal(0);
 				done();
@@ -152,7 +152,7 @@ describe('Lambda handler', () => {
 				expect(test.firstCall.args[0].message).to.be.equal('booom');
 				done();
 			};
-			index.handler(null, null, test).then(cb);
+			indexStub.handler(null, null, test).then(cb);
 		});
 	});
 });
