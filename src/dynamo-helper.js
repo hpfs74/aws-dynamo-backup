@@ -143,7 +143,7 @@ async function maintenancePlan(table, days) {
 
 	const now = new Date();
 	for (const backup of backups.BackupSummaries) {
-		if (dateDiff.inDays(backup.BackupCreationDateTime, now) > days) {
+		if (dateDiff.inDays(backup.BackupCreationDateTime, now) > Number(days)) {
 			result.push(
 				dynamodb
 					.deleteBackup({

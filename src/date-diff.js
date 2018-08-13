@@ -2,7 +2,7 @@ function inDays(d1, d2) {
 	const t2 = d2.getTime();
 	const t1 = d1.getTime();
 
-	return parseInt((t2 - t1) / (24 * 3600 * 1000));
+	return Math.ceil((t2 - t1) / (24 * 3600 * 1000));
 }
 
 function inWeeks(d1, d2) {

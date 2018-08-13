@@ -6,7 +6,9 @@
   "scripts": {
     "run:local": "docker run --env-file ./env.list --rm -v \"$PWD/src\":/var/task lambci/lambda:nodejs8.10",
     "lint": "eslint src/**/*.js test/**/*.js",
-    "test": "mocha -u bdd test/specs/**/*.js"
+    "test": "mocha -u bdd test/specs/**/*.js",
+    "clean": "rm -rf build",
+    "build": "npm run clean && mkdir build && cp -R src/* build/ && cp package.json build/ && cd build && npm install --only=prod"
   },
   "repository": {
     "type": "git",
@@ -26,5 +28,8 @@
     "mocha": "^5.2.0",
     "proxyquire": "^2.0.1",
     "sinon": "^6.1.4"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.291.0"
   }
 }

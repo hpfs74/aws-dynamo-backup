@@ -34,7 +34,7 @@ pipeline {
                 dir('code')
                 {
                     sh 'npm --version'
-                    sh 'npm install'
+                    sh 'npm install --only=prod' 
                 }
             }
         }
