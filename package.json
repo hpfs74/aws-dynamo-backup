@@ -6,9 +6,7 @@
   "scripts": {
     "run:local": "docker run --env-file ./env.list --rm -v \"$PWD/src\":/var/task lambci/lambda:nodejs8.10",
     "lint": "eslint src/**/*.js test/**/*.js",
-    "test": "mocha -u bdd test/specs/**/*.js",
-    "clean": "rm -rf build",
-    "build": "npm run clean && mkdir build && cp -R src/* build/ && cp package.json build/ && cd build && npm install --only=prod"
+    "test": "mocha -u bdd test/specs/**/*.js"
   },
   "repository": {
     "type": "git",
